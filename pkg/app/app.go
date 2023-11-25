@@ -3,18 +3,18 @@ package app
 import (
 	"net/http"
 
+	"github.com/Davut97/go-user/pkg/joke"
 	"github.com/Davut97/go-user/repo"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 )
 
 type App struct {
 	e        *echo.Echo
-	db       *mongo.Database
 	log      *zap.Logger
 	userRepo repo.UserRepository
+	joke     joke.JokeClient
 }
 
 type CustomValidator struct {
@@ -29,9 +29,9 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 	return nil
 }
 
-func NewApp(e *echo.Echo, userRepo repo.UserRepository, log *zap.Logger) *App {
+func NewApp(e *echo.Echo, userRepo repo.UserRepository, log *zap.Logger, jokeClient joke.JokeClient) *App {
 	e.Validator = &CustomValidator{validator: validator.New()}
-	app := &App{e: e, log: log, userRepo: userRepo}
+	app := &App{e: e, log: log, userRepo: userRepo, joke: jokeClient}
 	app.RegisterRoutes()
 	return app
 

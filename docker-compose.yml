@@ -1,8 +1,22 @@
-version: '3.8'
+version: "3.8"
 services:
+  web:
+    build: .
+    container_name: go-user
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_CONNECTION_STRING=mongodb://db:27017
+      - DB_NAME=users
+      - JOKES_URL=https://api.chucknorris.io
+      - JOKES_LIMIT=30
+      - JOKES_TIMEOUT=5
+      - BIND_ADDRESS=:8080
+
+    depends_on:
+      - db
   db:
     image: mongo:4.4
     ports:
       - "27017:27017"
-    volumes:
-      - ./data/db:/data/db
