@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -51,5 +52,16 @@ func (r *MongoUserRepository) Create(user User) (User, error) {
 		return User{}, err
 	}
 	user.ID = doc.InsertedID.(primitive.ObjectID)
+	return user, nil
+}
+func (r *MongoUserRepository) FindOne(id primitive.ObjectID) (User, error) {
+	ctx := context.Background()
+	var user User
+	err := r.collection.FindOne(ctx, bson.D{
+		{"_id", id},
+	}).Decode(&user)
+	if err != nil {
+		return User{}, err
+	}
 	return user, nil
 }
