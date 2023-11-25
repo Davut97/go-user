@@ -58,3 +58,107 @@ func TestCreate(t *testing.T) {
 	require.True(t, CheckPasswordHash(*testUser.Password, *newUser.Password))
 
 }
+func TestDelete(t *testing.T) {
+	db, err := SetUpDB()
+	require.NoError(t, err)
+	collection := db.Collection("users")
+	repo := NewMongoUserRepository(collection)
+	testUser := User{
+		Email:     randomdata.Email(),
+		FirstName: randomdata.FirstName(randomdata.RandomGender),
+		LastName:  randomdata.LastName(),
+		Password:  passwordString(randomdata.StringSample("abcdefghijklmnopqrstuvwxyz")),
+	}
+
+	user, err := repo.Create(testUser)
+
+	require.NoError(t, err)
+
+	newUser, error := repo.FindOne(user.ID)
+
+	require.NoError(t, error)
+
+	err = repo.Delete(newUser.ID)
+	require.NoError(t, err)
+
+	_, error = repo.FindOne(user.ID)
+	require.Error(t, error)
+}
+
+func TestUpdateUpdatedPassword(t *testing.T) {
+	db, err := SetUpDB()
+	require.NoError(t, err)
+	collection := db.Collection("users")
+	repo := NewMongoUserRepository(collection)
+	testUser := User{
+		Email:     randomdata.Email(),
+		FirstName: randomdata.FirstName(randomdata.RandomGender),
+		LastName:  randomdata.LastName(),
+		Password:  passwordString(randomdata.StringSample("abcdefghijklmnopqrstuvwxyz")),
+	}
+
+	user, err := repo.Create(testUser)
+
+	require.NoError(t, err)
+
+	newUser, error := repo.FindOne(user.ID)
+
+	require.NoError(t, error)
+
+	newUser.Email = randomdata.Email()
+	newUser.FirstName = randomdata.FirstName(randomdata.RandomGender)
+	newUser.LastName = randomdata.LastName()
+	newUser.Password = passwordString(randomdata.StringSample("abcdefghijklmnopqrstuvwxyz"))
+
+	_, err = repo.Update(newUser)
+	require.NoError(t, err)
+	updatedUser, err := repo.FindOne(user.ID)
+	require.NoError(t, err)
+
+	require.NotEqual(t, testUser.ID, updatedUser.ID)
+	require.NotEqual(t, testUser.Email, updatedUser.Email)
+	require.NotEqual(t, testUser.FirstName, updatedUser.FirstName)
+	require.NotEqual(t, testUser.LastName, updatedUser.LastName)
+	// Password should be different
+	require.NotEqual(t, newUser.Password, updatedUser.Password)
+
+}
+
+func TestUpdate(t *testing.T) {
+	db, err := SetUpDB()
+	require.NoError(t, err)
+	collection := db.Collection("users")
+	repo := NewMongoUserRepository(collection)
+	testUser := User{
+		Email:     randomdata.Email(),
+		FirstName: randomdata.FirstName(randomdata.RandomGender),
+		LastName:  randomdata.LastName(),
+		Password:  passwordString(randomdata.StringSample("abcdefghijklmnopqrstuvwxyz")),
+	}
+
+	user, err := repo.Create(testUser)
+
+	require.NoError(t, err)
+
+	newUser, error := repo.FindOne(user.ID)
+
+	require.NoError(t, error)
+
+	newUser.Email = randomdata.Email()
+	newUser.FirstName = randomdata.FirstName(randomdata.RandomGender)
+	newUser.LastName = randomdata.LastName()
+	newUser.Password = nil
+
+	_, err = repo.Update(newUser)
+	require.NoError(t, err)
+	updatedUser, err := repo.FindOne(user.ID)
+	require.NoError(t, err)
+
+	require.NotEqual(t, testUser.ID, updatedUser.ID)
+	require.NotEqual(t, testUser.Email, updatedUser.Email)
+	require.NotEqual(t, testUser.FirstName, updatedUser.FirstName)
+	require.NotEqual(t, testUser.LastName, updatedUser.LastName)
+	// Password should not be different
+	require.Equal(t, newUser.Password, updatedUser.Password)
+
+}
