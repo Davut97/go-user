@@ -30,7 +30,8 @@ func TestCreate(t *testing.T) {
 	db, err := SetUpDB()
 	require.NoError(t, err)
 	collection := db.Collection("users")
-	repo := NewMongoUserRepository(collection)
+	repo, err := NewMongoUserRepository(collection)
+	require.NoError(t, err)
 	testUser := User{
 		Email:     randomdata.Email(),
 		FirstName: randomdata.FirstName(randomdata.RandomGender),
@@ -54,15 +55,29 @@ func TestCreate(t *testing.T) {
 	require.Equal(t, user.FirstName, newUser.FirstName)
 	require.Equal(t, user.LastName, newUser.LastName)
 	require.Equal(t, user.Password, newUser.Password)
-
 	require.True(t, CheckPasswordHash(*testUser.Password, *newUser.Password))
 
+	userByEmail, err := repo.FindByEmail(testUser.Email)
+	require.NoError(t, err)
+	require.NoError(t, error)
+	require.Equal(t, user.ID, userByEmail.ID)
+	require.Equal(t, user.Email, userByEmail.Email)
+	require.Equal(t, user.FirstName, userByEmail.FirstName)
+	require.Equal(t, user.LastName, userByEmail.LastName)
+	require.Equal(t, user.Password, userByEmail.Password)
+	require.True(t, CheckPasswordHash(*testUser.Password, *newUser.Password))
+	// Test duplicate email
+	_, err = repo.Create(testUser)
+	require.Error(t, err)
+
 }
+
 func TestDelete(t *testing.T) {
 	db, err := SetUpDB()
 	require.NoError(t, err)
 	collection := db.Collection("users")
-	repo := NewMongoUserRepository(collection)
+	repo, err := NewMongoUserRepository(collection)
+	require.NoError(t, err)
 	testUser := User{
 		Email:     randomdata.Email(),
 		FirstName: randomdata.FirstName(randomdata.RandomGender),
@@ -89,7 +104,8 @@ func TestUpdateUpdatedPassword(t *testing.T) {
 	db, err := SetUpDB()
 	require.NoError(t, err)
 	collection := db.Collection("users")
-	repo := NewMongoUserRepository(collection)
+	repo, err := NewMongoUserRepository(collection)
+	require.NoError(t, err)
 	testUser := User{
 		Email:     randomdata.Email(),
 		FirstName: randomdata.FirstName(randomdata.RandomGender),
@@ -128,7 +144,8 @@ func TestUpdate(t *testing.T) {
 	db, err := SetUpDB()
 	require.NoError(t, err)
 	collection := db.Collection("users")
-	repo := NewMongoUserRepository(collection)
+	repo, err := NewMongoUserRepository(collection)
+	require.NoError(t, err)
 	testUser := User{
 		Email:     randomdata.Email(),
 		FirstName: randomdata.FirstName(randomdata.RandomGender),
